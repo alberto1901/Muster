@@ -1,0 +1,35 @@
+---
+1: !ruby/hash-with-ivars:Item
+  ivars:
+    :@id: '1'
+    :@location: location
+    :@quantity: '1'
+    :@scale: scale
+    :@description: Description of the item goes here. Hopefully a truly cool gaming
+      item or a fantastic set of rules that keeps players engage and is a joy for
+      the person running the game. This item demonstrates where the different data
+      fields appear throughout the Muster application. It is suggested you DELETE
+      this item before entering your own items. HAVE FUN
+    :@type: type
+    :@genre: example
+    :@manufacturer: manufacturer
+    :@status: status
+    :@notes: ''
+    :@tags: tag 1, tag 2, tag 3
+    :@icon_image: little_wars_icon.jpeg
+    :@item_image: little_wars_image.jpeg
+    :@image_dir: application_images
+    :@acquired: '2021-10-01'
+    :@web: ''
+    :@added: '2023-04-14 16:07:48 -0400'
+    :@painter: painter
+    :@completed: '2021-10-31'
+    :@cost: cost
+    :@value: value
+    :@name: Test Item Name -- DELETE WHEN READY
+    :@category: category
+    :@number_bases: '1'
+    :@base_size: base size
+    :@rule_system: rules system
+    :@material: material
+  elements: {}

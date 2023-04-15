@@ -1,0 +1,175 @@
+html, body {
+  background-color:#91b8b8;
+  font-family:helvetica, sans-serif;
+  font-size: 14pt;
+  width:100%;
+}
+
+html {display: flex;}
+
+img {
+    max-width: 100%;
+    height: auto;
+    width: auto\9; /* ie8 */
+}
+
+img.icon {
+  height:100px;
+  width:75px;
+  vertical-align:top;
+  padding-right:15px;
+}
+
+#content {
+  width: 55%;
+  float:left;
+  background-color:#dcdcc8;
+  padding-left:20px;
+  padding-top:30px;
+  padding-bottom:30px;
+  margin-right:20px;
+  border:3px solid black;
+  border-style:solid;
+}
+.menu {
+  width:40%;
+  float:right;
+  padding-left:20px;
+  font-family:helvetica, sans-serif;
+  font-size:12pt;
+  color: #8A8370;
+  text-align:left;
+  /*overflow:auto; */
+}
+.menu a:link, a:active, a:visited {
+  color: #3E3724;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.item {
+  font-family:helvetica, sans-serif;
+  font-size: 14pt;
+  padding-bottom:30px;
+  color: #8A8370;
+}
+
+#content a:link, a:active, a:visited {
+  color: #3E3724;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.name {
+  font-size:large;
+  font-family:helvetica, sans-serif;
+  font-size: 18pt;
+  font-weight:bold;
+  color: #3E3724;
+  overflow: hidden;
+}
+
+.source {
+  font-style:italic;
+  overflow: hidden;
+}
+
+.genre {
+  font-style:italic;
+  font-weight:bold;
+  font-family:helvetica, sans-serif;
+  font-size:14pt;
+  overflow: hidden;
+}
+
+.identifier {
+  font-family:helvetica, sans-serif;
+  font-size:14pt;
+  color: #80a8ae;
+  text-align:center;
+/*  z-index: 100;
+  position:absolute;
+  overflow:auto;*/
+}
+
+
+
+
+/* USED IN ATTRIBUTE AND PICKLIST COLLAPSE FEATURES */
+.image-view-button {
+  font-size:12pt;
+  color:#8a8370;
+  padding:0px;
+  border:none;
+  background-color:#dcdcc8;
+}
+.image-view-button.active, .image-view-button:hover {
+  background-color: #dcdcc8;
+    font-weight:bold;
+}
+.image-view {
+  padding: 0 18px;
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: max-height 1.5s, opacity 1.5s ease-out;
+}
+
+.collapsible {
+  background-color: #91b8b8;
+  color: #8A8370;
+  font-size: 24px;
+  font-weight: bold;
+  cursor: pointer;
+  padding: 18px;
+  width: 90%;
+  border: none;
+  text-align: left;
+  outline: none;
+}
+.collapsible.active, .collapsible:hover {
+  background-color: #80a8ae;
+}
+
+.attributes {
+  padding: 0 18px;
+  width: 90%;
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: max-height 1.5s, opacity 1.5s ease-out;
+  font-size: 18px;
+/*  transition: opacity 0.9s ease-in-out; */
+}
+
+/* USED IN MAIN SEARCH-ADD-QUERY-QUIT MENU -- SIBLING FADE: fade out siblings around a hovered item */
+.sibling-fade { visibility: hidden; }
+/* Prevents :hover from triggering in the gaps between items */
+
+.sibling-fade > * { visibility: visible; }
+/* Brings the child items back in, even though the parent is `hidden` */
+
+.sibling-fade > * { transition: opacity 150ms linear 100ms, transform 150ms ease-in-out 100ms; }
+/* Makes the fades smooth with a slight delay to prevent jumps as the mouse moves between items */
+
+.sibling-fade:hover > * { opacity: 0.4; transform: scale(0.8); }
+/* Fade out all items when the parent is hovered */
+
+.sibling-fade > *:hover { opacity: 1; transform: scale(1); transition-delay: 0ms, 0ms; }
+/* Fade in the currently hovered item */
+
+.sibling-fade {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.sibling-fade > * {
+  background: #80a8ae;
+  padding: 1em;
+  flex: auto;
+  margin: 0.1em;
+  text-align: center;
+  color: #3e3724;
+  font-size: 18pt;
+  text-decoration: bold;
+}

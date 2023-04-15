@@ -1,0 +1,39 @@
+    html, body {
+      font-family:helvetica, sans-serif;
+      font-size: 14pt;
+      background-color: #dcdcc8;
+      width:100%;
+    }
+    #report {
+      font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+      border-collapse: collapse;
+      width: 98%;
+    }
+    #report td, #report th {
+      border: 1px solid #ddd;
+      padding-left: 8px;
+    }
+
+    #report tr:nth-child(even){background-color: #f2f2e6;}
+
+    #report tr:hover {background-color: #ddd;}
+
+    #report th {
+      padding-top: 12px;
+      padding-bottom: 12px;
+      text-align: left;
+      background-color: #91b8b8;;
+      color: black;
+      font-size: 24px;
+    }
+
+    @media print {
+       div {
+        page-break-after: always;
+      }
+    }
+
+    img {
+      max-height: 200px;
+      width: auto;
+    }

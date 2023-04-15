@@ -1,0 +1,234 @@
+<html>
+<head>
+
+<style>
+html, body {
+  background-color:#91b8b8;
+  font-family:helvetica, sans-serif;
+  font-size: 14pt;
+}
+
+html {display: flex;}
+img {
+    max-width: 100%;
+    height: auto;
+    width: auto\9; /* ie8 */
+}
+
+#content {
+  width: 55%;
+  float:left;
+  background-color:#dcdcc8;
+  padding-left:20px;
+  padding-top:30px;
+  padding-bottom:30px;
+  margin-right:20px;
+  border:3px solid black;
+  border-style:solid;
+}
+.menu {
+  width:40%;
+  float:right;
+  padding-left:20px;
+  font-family:helvetica, sans-serif;
+  font-size:14pt;
+  /*color: #8A8370;*/
+  text-align:left;
+  /*overflow:auto; */
+}
+.menu a:link, a:active, a:visited {
+  color: #3E3724;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+/* USED IN ATTRIBUTE AND PICKLIST COLLAPSE FEATURES */
+.collapsible {
+  background-color: #efefe6;
+  color: #8A8370;
+  font-size: 24px;
+  font-weight: bold;
+  cursor: pointer;
+  padding: 18px;
+  width: 90%;
+  border: none;
+  text-align: left;
+  outline: none;
+}
+.active, .collapsible:hover {
+  background-color: #cdcdb1;
+}
+
+#button_core{
+  background-color: #grey;
+}
+#button_core.active, #button_core.collapsible:hover {
+  background-color: #80a8ae;
+}
+
+.attributes {
+  padding: 0 18px;
+  width: 90%;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.9s ease-out;
+  font-size: 18px;
+}
+</style>
+
+
+<script>
+
+  function toggle(divId) {
+  var x = document.getElementById(divId);
+  if (x.style.display === "none") {
+    x.style.display = "block";
+  } else {
+    x.style.display = "none";
+  }
+}
+
+
+function showDivs(buttons){
+    buttons.forEach(button => document.getElementById(button).click());
+}
+</script>
+
+</head>
+<body onload="showDivs(['button_main_page']);">
+<div id="content">
+<h1 style='width:100%;text-align:center;'>Click on Help Topic to Expand/Collapse</h1>
+<button type='button' class='collapsible' id='button_main_page'>&#8227; Main Page</button>
+<div class='attributes' id='main_page'>
+  <p>The main page of Muster displays two distinct areas: A Navigation Pane on the right and a Work Area on the left (with a beige backround).</p>
+  <p>At the top of the Navigation Pane is the Muster Logo image. Clicking on this image will always return you to the main page. Under the image is a menu bar with clickable buttons for 'Search', 'Add Item', 'Query', 'Help' and 'Quit'.</p>
+  <p>The area beneath the menu bar will vary depending upon the command being executed.</p>
+  <p>By default the Work Area displays the 10 most recently edited items.</p>
+  <p>The Work Area presents summary reports of items. Notable features include a link to <b>Open</b> the item if it is an electronic document as well as a link to <b>View</b> any associated images. The bottom line of the summary record has links to perform a Simple Search for associated <b>Genres</b> and <b>Tags</b>.</p>
+  <p>You can view a full report on the item by clicking on the small icon picture located to the left of the summary report.</p>
+  <div style="width:100%;text-align:center;">
+    <span style="font-size:10pt;color:grey;">Sample Search Results--<i>click to view full size</i></span><br />
+    <a href='Screenshot.png' target="_blank"><img style='width:50%;' src='Screenshot.png' /></a></div>
+</div>
+
+<button type='button' class='collapsible' id='button_add_item'>&#8227; Adding New Items</button>
+<div class='attributes' id="add_item">
+  <p>Click on the 'Add Item' button in the menu bar. This will open a new, blank 'Adding New Item' page where you can input the attributes of the item. Note that many of the attribute sections (figures, finish, images, etc.) are collapsed and hidden from view. Click on the attribute name to expand (or collapse) the section as needed.</p>
+  <p>When adding or editing an item the lower area of the Navigation Pane will display a list of previously used 'Attribute Pick Lists' (also expandable). Clicking on the attribute value in the Picklist will populate the corresponding field in the item edit form. Using the picklists encourages consist teminology and reduces the amount of typing you need to do. Note that this feature <b>will replace</b> any pre-existing data in the form field.</p>
+  <p>Remember to click the 'save' button at the top of the form. This will return you to the main page showing the most recently edited items. The newly edited item should appear at the top of the list.</p>
+  <p>You can click on the 'Muster' image at the top of Navigation Pane at any time to return to the main page without saving the item.</p>
+</div>
+
+<button type='button' class='collapsible' id='button_data_fields'>&#8227; Data Fields</button>
+<div class='attributes' id='data_fields'>
+  <p><b>name <i>(required):</i></b> This is the short primary descriptor of the item.</p>
+  <p><b>description</b>: A detailed description of the item.</p>
+  <p><b>id</b>: This is a system assigned numeric identifier, it is not editable by the user.</p>
+  <p><b>genre* <i>(highly suggested)</i></b>: A single broad grouping of items, often of time periods or campaign theatres.</p>
+  <p><b>tags</b>: A list of related subject areas or concepts. Multiple values can be entered by separating the tags with commas.</p>
+  <p><b>qty</b>: The number of items covered by this record.</p>
+  <p><b>category* <i>(highly suggested)</i></b>: A more specific grouping, e.g., figures, rules, ships, etc.</p>
+  <p><b>material</b>: The material the item is made from, metal, plastic, composite, etc.</p>
+  <p><b>location</b>: Where is the item stored?</p>
+  <p><b>project/rules system</b>: What rules are used for this item? Or, what project does it belong to?</p>
+  <p><b>figures / manufacturer</b>: Who made or produced the item?</p>
+  <p><b>figures / scale</b>: The scale (1/56) or size (15mm) of the figure.</p>
+  <p><b>figures / type</b>: Infantry, cavelry, artillery, etc.</p>
+  <p><b>figures / status</b>: NIP (New in Box), in process, primed, based, completed, etc.</p>
+  <p><b>finish / qty</b>: Quantity of bases of items (could be the same as previous quantity).</p>
+  <p><b>finish / base size</b>: 1x1 inch, Round-25mm, etc, the size of the base.</p>
+  <p><b>finish / painter</b>: Who painted this item?</p>
+  <p><b>finish / completed date</b>: When was the item completed.</p>
+  <p><b>images / icon</b>: A small image to represent this item--should be 70 pixels wide and 100 pixels high for display on the item and search pages. Could be shared with related class of items. Icon images cannot be deleted in Muster because they may be used by multiple items. They can be manually deleted from the muster/application_images folder.</p>
+  <p><b>images / item image</b>: A larger image of the specific item. Multiple images can be uploaded but not all at the same time. Upload one image, save the item, edit it again to upload the second image, etc. individual images can be deleted in this section by clicking the 'delete' box beneath the image and then saving the item.</p>
+  <p><b>valuation / cost</b>: What did you pay to purchase the item?</p>
+  <p><b>valuation / value</b>: How much would you want to sell this item?</p>
+  <p><b>valuation / acquired date</b>: Date on which you acquired this item.</p>
+  <p><b>links / web review/source</b>: Supply an internet url for the item (for example to the seller's web site) or, if cataloging an electronic document you can load it into Muster here.</p>
+  <p><b>links / notes</b>: Random notes about the item.</p>
+  <p><b>delete</b>: To delete the item from Muster, click the 'enable' check box and then click on the 'delete' button. This will delete the record of the item but uploaded pictures, icons or electronic documents will remain in the Muster folders.</p>
+</div>
+
+<button type='button' class='collapsible' id='button_edit_items'>&#8227; Editing Existing Items</button>
+<div class='attributes' id="edit_items">
+  <p>Click on the id number of the item in the search results page to edit an item record. You may need to perform a simple search for the item or use the 'Simple Search Attribute List' on the Navigation Pane in order to view the summary record of the item.</p>
+</div>
+
+<button type='button' class='collapsible' id='button_delete_items'>&#8227; Deleting Items</button>
+<div class='attributes' id="delete_items">
+  <p>You must edit an item record in order to get to the delete function. Bring the item summary record up in the Work Area through a simple search. Click on the item icon to edit the item record. Once the item record is open in the Work Area then scroll to the bottom of the record. Expand the 'delete' category, check the 'enable delete' box and then click the 'delete item #' button.</p>
+  <p>Note that deleting an item removes the item record from Muster but it does not automatically remove associated images or uploaded documents. Those remain in the Muster resource folders and can be removed manually.</p>
+</div>
+
+<button type='button' class='collapsible' id='button_simple_search'>&#8227; Simple Searches</button>
+<div class='attributes' id="simple_search">
+  <p>The first and easiest way to execute a 'Simple Search' is by clicking on one of the attribute values in the 'Simple Search Attribute List' in the Navigation Pane. Every item containing the value in the attribute field will be displayed in the Work Area. The simple search lists are automatically generated from the values entered for individual attributes in item records.</p>
+  <p>The second way to perform a simple search is to use the search function at the top of the Navigation Pane beneath the Command Menu. Enter a search term in the text box, select whether you want a broad ('containing') or an exact search and select the field you wish to search. Finally, click on the 'search' button. All items which match your search term will be displayed in the Work Area sorted alphabetically by name.</p>
+  <p>A broad search (e.g., 'containing') for 'WWI' will return both 'WWI' and 'WWII' because both values contain the sequence 'WWI'. An exact search for 'WWI' will return items with only 'WWI'.</p>
+  <p>You can search for multiple terms in a single field by separating the terms with tildes '~'.For example, searching for 'ships~boats' contained in the description field will return all items with 'ships' OR 'boats' in the description. However, if you perform an 'exact' search for 'ships~boats' Muster will look for the exact term 'ships~boats' including the tilde! 'Exact' searches do not work with multiple search terms.</p>
+</div>
+
+<button type='button' class='collapsible' id='button_queries'>&#8227; Queries</button>
+<div class='attributes' id="queries">
+  <p>Unlike simple searches, Queries allow more flexibility in defining search parameters and formatting the results. The Query page is accessible by clicking the 'Query' button of the Command Bar on the Navigation Pane.</p>
+  <p>The Query page displays every attribute field and the user can select which attributes to display in the Query results by giving them an order in which to display. Query results can be filtered by entering values in the attribute text boxes and, if desired, selecting whether the field matches the term exactly.</p>
+  <p>By default, queries filtered by multiple fields are boolean 'AND' searches--field 1 must contain 'THIS' AND field 2 must contain 'THAT'. However, a boolean 'OR' search can be conducted by preceeding the second or subsequent search terms with a tilde '~'. In other words, field 1 contains 'THIS' OR field 2 contains '~THAT'</p>
+  <p>Likewise, a single field can be searched for multiple terms. For example, querying field 1 for 'THIS~THAT~THOSE' would return records with 'THIS' OR 'THAT' OR 'THOSE' in field 1, however, remember the limitation of 'exact' searches combined with '~'. They do not work!</p>
+  <p>Lastly, you can sort the query results by any field.</p>
+  <p>A summary row will be provided for each value in the first ordered field. For example, if 'location' is the first field then a summary row will be provided for each unique location.<p>
+  <p>Whenever the 'id' field is included in a query the resulting report will display the 'id' as a link to the item edit page.</p>
+  <p>Providing the query a name will add it to the Saved Query list. Clicking on the Saved Query name will recall the query parameters for repeated querying. Unamed queries are lost once the query page is exited.</p>
+  <p>Query results open in a new browser tab. You can simply close the results tab to return to the query page, modify it if needed and run it again.</p>
+  <p>You'll probably need to play around with the query parameters to get a better understanding of how they function.</p>
+    <div style="width:100%;text-align:center;"><span style="font-size:10pt;color:grey;">Sample Query Results--<i>click to view full size</i></span><br /><a href='muster_query_results.png' target="_blank"><img style='width:50%;' src='muster_query_results.png' /></a></div>
+  </div>
+
+<button type='button' class='collapsible' id='button_backup'>&#8227; Backing Up Your Data and Tech Tips</button>
+<div class='attributes' id="backup">
+   <p>Muster stores data in simple text files in YAML format in the 'muster/' folder. The item records are saved in 'application_items.yml'. Saved reports are saved in 'application_reports.yml'. To back up your data simply <b>copy</b> these files to wherever you keep your backup data. To restore your data simply <b>copy</b> your backup *.yml files to the muster folder.</p>
+   <p>YAML files can be viewed with any text editor, though it's not recommended to change the files unless you are familiar with the YAML data format.</p>
+   <p>If you upload images they will be stored in the muster/application_images/ folder. If you upload electronic documents they will be saved in the muster/application_publications/ folder. Remember, if you delete an item in Muster, associated uploaded images and documents are NOT removed from these folders. You'll need to remove them manually.</p>
+ </div>
+</div>
+
+<div class='menu'>
+  <div class="item" style="width:100%;text-align:center;"><img src='../application_resources/application_banner.png' alt='application banner image'/></div>
+  <h1>Welcome to Muster!</h1>
+  <h2>Muster is a collections management system devoted to miniature table-top gaming.</h2>
+  <p>Copyright (c) 2021, Jeffery S. Koppe</p>
+  <p><img src='GPLv3.png' /> Muster is released under a GPL v.3 license. Visit <a href="https://www.gnu.org/licenses/gpl-3.0.en.html">GNU.org</a> for more information.</p>
+
+  <h2>Technical Requirements</h2>
+  <p>Muster is written in the Ruby programming language. Ruby must be installed and configured on the computer for Muster to run. Details on installing Ruby can be found at <a href="https://www.ruby-lang.org/en/">Ruby-lang.org.</a> Muster uses the Webrick web server which up until Ruby version 3.0 was part of the Ruby core distribution. With 3.0, the Webrick Gem must be specifically installed. Muster also depends upon the YAML gem, though at the time of this writing that is still part of the Ruby Core Distribution.</p>
+
+  <h2>Web Server? What's this about a web server?</h2>
+  <p>Yes, Muster relies on the Webrick web server running on your local machine and you access it via your preferred web browser. Given the right information, other computers can access the server. That's what servers do. The Muster code does not do a significant amount of input validation, therefore, it is recommended that you keep your computer secure behind a firewall when running Muster.</p>
+
+  <h2>Quitting Muster</h2>
+  <p>Notice the quit button in the upper right hand corner of Muster. Clicking this button will shut down Muster and the Webrick web server. The quit button will not close your browser. However, if you simply shut down your browser without clicking the quit button, both Muster and Webrick will continue to run in the background and you may not even realize it unless you look at the process list of your operating system. As long as Muster is running in the backgroud, you will not be able to start another instance of it and, depending upon how you try start it, it may not give you any indication as to why. If Muster is running in the background you can get to it by opening up your browser and going to <a href="localhost:8000/items">localhost:8000/items</a>.</p>
+
+  <p>So how do you quit Muster after you've closed your browser? Simply open your browser again and type <a href="localhost:8000/quit">localhost:8000/quit</a> into the address bar. You should then get a message telling you that Muster has shut down.</p>
+</div>
+
+
+<script>
+//collapsible attribute code
+var coll = document.getElementsByClassName("collapsible");
+var i;
+
+for (i = 0; i < coll.length; i++)
+{
+  coll[i].addEventListener("click", function()
+  {
+    this.classList.toggle("active");
+    var content = this.nextElementSibling;
+    if (content.style.maxHeight){
+      content.style.maxHeight = null;
+  } else
+  {
+      content.style.maxHeight = content.scrollHeight + "px";
+  }
+  }); //?
+}
+</script>
+</body></html>
