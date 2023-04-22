@@ -170,7 +170,7 @@ end #Report Class
 
 
 ##################################################################
-#Query Results
+#Query Results`
 #Query
 #
 ##################################################################
@@ -1606,7 +1606,7 @@ class Menu
         scope = ''
       end
 
-    html << %Q~<button class="collapsible" id='button_#{attribute.downcase}' >&#8227; #{attribute.downcase.gsub(/_/,' ')}</button>~
+    html << %Q~<div class="collapsible" id='button_#{attribute.downcase}' >&#8227; #{attribute.downcase.gsub(/_/,' ')}</div>~
     html << %Q~<div class="attributes">~
 
       current_attribute_initial = String.new() #when this changes insert a separator
@@ -2319,6 +2319,18 @@ class BulkUpdate < WEBrick::HTTPServlet::AbstractServlet
       end
     end #request.foreach
 
+    #no reason to continue if there are no update values
+    if update_fields.length == 0 then
+      return 200, "text/html", %Q~<!DOCTYPE html><html lang="en"><head>
+      <link rel="stylesheet" type="text/css" href="../application_styles/application.css" />
+      <link rel="stylesheet" type="text/css" href="../application_styles/report.css" />
+      <title>#{$APPLICATION_NAME} BULK UPDATE</title>
+      </head>
+      <body><h2>No field values provided for update<span style="width:100%;color:#8A8370;font-size:9pt;">close browser tab if finshed | click browser back to return to bulk update</span></h2>
+      </body></html>~
+    end
+
+    #update the fields with new values
     update_items.each do | id |
       update_fields.each do | field_name, value |
           $body << %Q~<tr><td>#{id}</td><td>#{$collection.items[id].name}</td><td>#{field_name}</td><td>#{value}</td></tr>~
@@ -2329,7 +2341,7 @@ class BulkUpdate < WEBrick::HTTPServlet::AbstractServlet
 
     end #update_items.each
 
-    #web page
+    #return a page showing the updated fields and values
     return 200, "text/html", %Q~<!DOCTYPE html><html lang="en"><head>
     <link rel="stylesheet" type="text/css" href="../application_styles/application.css" />
     <link rel="stylesheet" type="text/css" href="../application_styles/report.css" />
@@ -2358,13 +2370,23 @@ class BulkUpdate < WEBrick::HTTPServlet::AbstractServlet
       #added is last modified date-time
       next if var.match(/^@id|@added$/)
 
+      type = 'text'
+      #give acquired and completed input boxes calendar widget
+      if var.match(/^@acquired|@completed$/) then
+        type = 'date'
+      end
+      #give quantity and number_bases input boxes number type drop down
+      if var.match(/^@quantity|@number_bases$/) then
+        type = 'number'
+      end
+
       #clean up the instance variable names
       value.gsub!(/@/,'')
       display.gsub!(/@/,'')
       display.gsub!(/_/,' ')
 
       #create the html table rows with field names and text boxes
-      bulk_update_fields << %Q~<span style="display:inline-block;width:10em;">#{display}</span><span><input type='text' id='#{value}_filter' name='#{value}_filter' /></span><br />~
+      bulk_update_fields << %Q~<span style="display:inline-block;width:10em;">#{display}</span><span><input type='#{type}' id='#{value}_filter' name='#{value}_filter' /></span><br />~
     end #each instance_variables
 
 
@@ -2380,31 +2402,35 @@ class BulkUpdate < WEBrick::HTTPServlet::AbstractServlet
   {
     document.getElementById(form_field).value=form_value;
   }
+
+
   </script>
   <title>#{$APPLICATION_NAME} BULK UPDATE</title>
 </head>
 <body>
-
-      <div id='update_fields' name='update_fields' style='width:25%; float:left;'><h2>Bulk Update Fields</h2>
-        <form id='bulk_update' id='bulk_update' action='/bulk_update'><input type='submit' value="UPDATE ALL" /><br />
+      <form id='bulk_update' id='bulk_update' action='/bulk_update'>
+        <div id='update_fields' name='update_fields' style='width:25%; float:left;'><h2>Bulk Update Fields</h2>
+          <input type='submit' value="UPDATE ALL" /><br />
           #{bulk_update_fields}
-      </div>
+        </div>
 
-      <div id='update_list' name='update_list' style='width:75%; float:right;'>
-        <table id='report'>
-          <tr><th>Update</th><th>#{header_row.join("</th><th>")}</th></tr>
-          #{report_row_formatted}
-        </table>
-        </form>
+        <div id='update_list' name='update_list' style='width:75%; float:right;'>
+          <div id='button_items' class="collapsible" >&#8227; view selected items</div>
+          <div id='item_list' class="attributes" style="overflow:auto;">
+            <table id='report' id='report' style="width:100%;">
+              <tr><th>Update</th><th>#{header_row.join("</th><th>")}</th></tr>
+              #{report_row_formatted}
+            </table>
+          </div>
+      </form>
 
-        <button class="collapsible" id='button_attributes' style="width:100%;">&#8227; click to select common attributes</button>
+      <div class="collapsible" >&#8227; view common attributes</div>
         <div class="attributes" style="width:100%;">
           <div id="menu" class="menu" style="width:100%;">
             #{Menu.new('QUERY',$PICKLISTS).html}
           </div>
         </div>
-
-      </div>
+    </div>
 
   #{Collapsible_javascript.new.script}
 

@@ -12,7 +12,7 @@ The various fields in Muster are intentionally generic providing flexibility in 
 
 Simple single-field searches are easily accessible from the main menu and a more flexible (though slightly more complex) querying system is also available. The Query system allows you to define reports and run them repeatedly. You can perform bulk updates on multiple items through the query system.
 
-## Muster Data fields:
+### Muster Data fields:
 
 - **name** (required): This is the short primary descriptor of the item.
 
