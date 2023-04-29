@@ -2408,7 +2408,7 @@ class BulkUpdate < WEBrick::HTTPServlet::AbstractServlet
   <title>#{$APPLICATION_NAME} BULK UPDATE</title>
 </head>
 <body>
-      <form id='bulk_update' id='bulk_update' action='/bulk_update'>
+      <form id='bulk_update' name='bulk_update' action='/bulk_update' method='post'>
         <div id='update_fields' name='update_fields' style='width:25%; float:left;'><h2>Bulk Update Fields</h2>
           <input type='submit' value="UPDATE ALL" /><br />
           #{bulk_update_fields}
@@ -2425,7 +2425,7 @@ class BulkUpdate < WEBrick::HTTPServlet::AbstractServlet
       </form>
 
       <div class="collapsible" >&#8227; view common attributes</div>
-        <div class="attributes" style="width:100%;">
+        <div class="attributes" style="width:100%;overflow:auto;">
           <div id="menu" class="menu" style="width:100%;">
             #{Menu.new('QUERY',$PICKLISTS).html}
           </div>
