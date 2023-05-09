@@ -1606,8 +1606,8 @@ class Menu
         scope = ''
       end
 
-    html << %Q~<div class="collapsible" id='button_#{attribute.downcase}' >&#8227; #{attribute.downcase.gsub(/_/,' ')}</div>~
-    html << %Q~<div class="attributes">~
+    html << %Q~\n<div class="collapsible" id='button_#{attribute.downcase}' >&#8227; #{attribute.downcase.gsub(/_/,' ')}</div>\n~
+    html << %Q~<div class="attributes">\n~
 
       current_attribute_initial = String.new() #when this changes insert a separator
       separator = String.new()
@@ -1634,7 +1634,7 @@ class Menu
 
       } #end all_attributes.each
 
-    html << "</div>" #close attribute value div
+    html << "\n</div>" #close attribute value div
   end #each attributes
 
   return %Q~<br style="clear:both;" />#{html}~
@@ -2424,12 +2424,9 @@ class BulkUpdate < WEBrick::HTTPServlet::AbstractServlet
           </div>
       </form>
 
-      <div class="collapsible" >&#8227; view common attributes</div>
-        <div class="attributes" style="width:100%;overflow:auto;">
           <div id="menu" class="menu" style="width:100%;">
             #{Menu.new('QUERY',$PICKLISTS).html}
           </div>
-        </div>
     </div>
 
   #{Collapsible_javascript.new.script}
