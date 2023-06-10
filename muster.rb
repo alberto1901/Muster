@@ -367,12 +367,14 @@ class QueryResults < WEBrick::HTTPServlet::AbstractServlet
 
     if chart then
 
-      sort_fields = Array.new()
-      sort_fields[0] = 'acquired'
-      sort_fields[1] = 'completed'
-      subset_ids = $collection.sort(subset, sort_fields)
-      subset_ids.reverse!
-
+      #sort the ids so the detail listing matches chart
+      if chart_type != 'timeline' then
+        subset_ids = $collection.sort(subset, sort_fields)
+      else
+        subset_ids = $collection.sort(subset, ['acquired','completed'])
+        subset_ids.reverse!
+      end
+      #call and return the chart
       return 200, "text/html", Chart.display(subset_ids, query, chart_type, chart_qty)
     end #if bulk_update
     #END BULK UPDATES
@@ -513,21 +515,21 @@ report.each do |row|
 
   #if id is present in report format it as a link to edit the item
   if id_format != nil && row[id_format].to_s != '' && row[id_format] != 0 then
-    row[id_format] = %Q~<a href="http://localhost:8000/manage_item?id=#{row[id_format]}" target="_blank">#{row[id_format]}</a>~
+    row[id_format] = %Q~<a href="#{$SERVER}:#{$PORT}/manage_item?id=#{row[id_format]}" target="_blank">#{row[id_format]}</a>~
   end
 
   #if item_image is present in report format it as a image, not the item_image name
   if image_format != nil && row[image_format].to_s != '' && row[image_format] != 0 then
     formatted_pictures = String.new()
     row[image_format].split(',').each do |picture|
-           formatted_pictures << %Q~<img src="http://localhost:8000/application_images/#{picture}" alt=#{picture} /> ~
+           formatted_pictures << %Q~<img src="#{$SERVER}:#{$PORT}/application_images/#{picture}" alt=#{picture} /> ~
     end
     row[image_format] = formatted_pictures
   end
 
   #if icon_image is present in report format it as a image, not the icon_image name
   if icon_format != nil && row[icon_format].to_s != '' && row[icon_format] != 0 then
-    row[icon_format] = %Q~<img style="height:100px;width:75px;" src="http://localhost:8000/application_images/#{row[icon_format]}" />~
+    row[icon_format] = %Q~<img style="height:100px;width:75px;" src="#{$SERVER}:#{$PORT}/application_images/#{row[icon_format]}" />~
   end
 
   #if web is present in report format it as a link, not the bare url
@@ -535,7 +537,7 @@ report.each do |row|
     if row[web_format].match(/^http/) then
       row[web_format] = %Q~<a href="#{row[web_format]}" target="_blank" >#{row[web_format]}</a>~
     else
-      row[web_format] = %Q~<a href="http://localhost:8000/#{row[web_format]}" target="_blank" >#{row[web_format]}</a>~
+      row[web_format] = %Q~<a href="#{$SERVER}:#{$PORT}/#{row[web_format]}" target="_blank" >#{row[web_format]}</a>~
     end
   end
 
@@ -1564,13 +1566,13 @@ class Banner
 
   def html
     return %Q~<div class="item" style="width:100%;text-align:center;">
-      <a href="http://localhost:8000/items"><img src='../application_resources/application_banner.png' alt='application banner image' style="80%;"/></a><br />
+      <a href="#{$SERVER}:#{$PORT}/items"><img src='../application_resources/application_banner.png' alt='application banner image' style="80%;"/></a><br />
     <div class="sibling-fade" style="width:90%;">
-        <a href="http://localhost:8000/items">Search</a>
-        <a href="http://localhost:8000/manage_item">Add Item</a>
-        <a href="http://localhost:8000/query">Query</a>
-        <a target="_new" href="http://localhost:8000/application_resources/about.html">Help</a>
-        <a href="http://localhost:8000/quit">Quit</a>
+        <a href="#{$SERVER}:#{$PORT}/items">Search</a>
+        <a href="#{$SERVER}:#{$PORT}/manage_item">Add Item</a>
+        <a href="#{$SERVER}:#{$PORT}/query">Query</a>
+        <a target="_new" href="#{$SERVER}:#{$PORT}/application_resources/about.html">Help</a>
+        <a href="#{$SERVER}:#{$PORT}/quit">Quit</a>
     </div>
 </div>
     ~
@@ -2059,7 +2061,7 @@ class DeleteItem < WEBrick::HTTPServlet::AbstractServlet
 #       puts "do_POST 1"
     else
       warning = %Q~<script type="text/javascript">window.onload = function(){alert('You must first enable the delete before deleting an item from the database.');}</script>~
-      status, content_type, body = 200, "text/html", %Q~<html><head>#{warning}<meta http-equiv="refresh" content="0;url=http://localhost:8000/manage_item?id=#{request.query['id']}"></head><body></body></html>~
+      status, content_type, body = 200, "text/html", %Q~<html><head>#{warning}<meta http-equiv="refresh" content="0;url=#{$SERVER}:#{$PORT}/manage_item?id=#{request.query['id']}"></head><body></body></html>~
 #      puts "do_POST else"
     end
     response.status = status
@@ -2082,12 +2084,12 @@ class DeleteItem < WEBrick::HTTPServlet::AbstractServlet
     confirmed.strip!
 
     if confirmed != 'confirmed' or id.match(/[^0-9]+/) then
-          return 200, "text/html", %Q~<html><head><meta http-equiv="refresh" content="0;url=http://localhost:8000/items"></head><body>Input doesn't validate</body></html>~
+          return 200, "text/html", %Q~<html><head><meta http-equiv="refresh" content="0;url=#{$SERVER}:#{$PORT}/items"></head><body>Input doesn't validate</body></html>~
     else
        $collection.delete(id.to_i)
 
     #call first page with new/updated item
-    return 200, "text/html", %Q~<html><head><meta http-equiv="refresh" content="0;url=http://localhost:8000/items"></head><body></body></html>~
+    return 200, "text/html", %Q~<html><head><meta http-equiv="refresh" content="0;url=#{$SERVER}:#{$PORT}/items"></head><body></body></html>~
     end #if else
 
   end #delete_item
@@ -2305,7 +2307,7 @@ class SaveItems < WEBrick::HTTPServlet::AbstractServlet
   $collection.add(new_item)
 
   #call first page with new/updated item only (?)
-  return 200, "text/html", %Q~<html><head><meta http-equiv="refresh" content="0;url=http://localhost:8000/items?show_id=#{id}"></head><body></body></html>~
+  return 200, "text/html", %Q~<html><head><meta http-equiv="refresh" content="0;url=#{$SERVER}:#{$PORT}/items?show_id=#{id}"></head><body></body></html>~
 
 end
 end #Class SaveItems
@@ -2510,7 +2512,7 @@ class Chart < WEBrick::HTTPServlet::AbstractServlet
   #returns link to manage item for a given id:
   def self.link_id(id)
 
-    return %Q~<a href="http://localhost:8000/manage_item?id=#{id}" target="_blank">#{id}</a>~
+    return %Q~<a href="#{$SERVER}:#{$PORT}/manage_item?id=#{id}" target="_blank">#{id}</a>~
 
   end #link_id
 
@@ -2560,7 +2562,7 @@ class Chart < WEBrick::HTTPServlet::AbstractServlet
     #fields selected by user to chart
     sort_fields = Array.new()
     primary_field = Hash.new() #is used for x axis (horizontal)
-    secondary_field = Hash.new() #is used for y axis (vertical)    
+    secondary_field = Hash.new() #is used for y axis (vertical)
 
     colorway = ['#183a0a','#1c552a','#18714d','#068f74','#00ada0','#00cbce','#00e9ff','#00d0f9','#00b6f0','#009de3','#0083d1','#2f68bb','#474da0']
 
@@ -2588,6 +2590,12 @@ class Chart < WEBrick::HTTPServlet::AbstractServlet
     #hash for storing colors indexed with chart_field[0] values used to assign color to detail records
     detail_color = Hash.new()
     i = 0 #used to assign above to colorway values
+
+#chart_fields[0]
+#    sort_fields = Array.new()
+#    sort_fields[0] = 'completed'
+#    subset_ids = $collection.sort(subset_ids, sort_fields)
+
 
     #loop through the ids supplied by the report function
     subset_ids.each do | key |
@@ -3256,7 +3264,7 @@ end #class
 
  #This takes the name of the file, cleans it up, and uses it as the application name throughout the script
  $APPLICATION_NAME = File.basename($0, File.extname($0)).downcase.split(/ |\_|\-/).map(&:capitalize).join(" ")
- $VERSION = 'v.20220104'
+ $VERSION = 'v.20230610'
 
  #Navigational menus
  $MENUS     = ['location','genre','rule_system','tags','scale','category','status','manufacturer','type','material','painter','base_size']
@@ -3272,16 +3280,18 @@ end #class
 #    puts "creating reports"
  end
 
+ #using https would be good but it is dependent upon the user's environment with SSL and complicates install
+  $SERVER = 'http://localhost'
+  $PORT = 8500
 
-if $0 == __FILE__ then
+ if $0 == __FILE__ then
 
   #mount servlets for various pages/commands
-  server = WEBrick::HTTPServer.new(:Port => 8000,
+  server = WEBrick::HTTPServer.new(:Port => $PORT,
                                    :DocumentRoot => Dir::pwd,
                                    :SSLEnable => true,
                                    :SSLCertName => $APPLICATION_NAME
                                  )
-
 
   server.mount "/items", ShowItems
   server.mount "/manage_item", ManageItems
@@ -3296,7 +3306,7 @@ if $0 == __FILE__ then
   server.mount "/chart", Chart
 
   #open the default browser and load items page
-  link = "http://localhost:8000/items"
+  link = "#{$SERVER}:#{$PORT}/items"
   if RbConfig::CONFIG['host_os'] =~ /mswin|mingw|cygwin/ then
     system("start #{link}")
   elsif RbConfig::CONFIG['host_os'] =~ /darwin/ then
