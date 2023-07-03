@@ -223,9 +223,7 @@ class QueryResults < WEBrick::HTTPServlet::AbstractServlet
 
     #check and save the query parameters for later recall if a query name has been provided
     if request.query['query_name'] &&              #save/update report if named
-       request.query['query_name'].to_s != '' &&   #unless report named ''
-       request.query['chart'].to_s != 'on' &&      #unless creating charts
-       request.query['bulk_update'].to_s != 'on'   #unless doing bulk updates
+       request.query['query_name'].to_s != ''      #unless report named ''
       save_report(request.query)
     end #if query name
 
@@ -238,27 +236,29 @@ class QueryResults < WEBrick::HTTPServlet::AbstractServlet
     summary_field_name = ''
 
     #Save the report options for use later in formatting the query Results
+    report_type = request.query['report_type']
+
+    if report_type == 'standard' then
+      report_format = ''
+      exclude_summary = request.query['exclude_summary']
+    elsif report_type == 'labels' then
+      report_format = report_type
+      #exclude_summary = ''
+    elsif report_type == 'tab_delimited' then
+      exclude_html_format = report_type
+      exclude_summary = 'ON'
+    elsif report_type == 'bulk_update' then
+      bulk_update = report_type
+      exclude_summary = request.query['exclude_summary']
+    elsif report_type.match(/pie|bar|bar-stacked|bar-grouped|timeline/) then
+      chart = 'ON'
+      chart_qty = 'ON'
+      exclude_summary = 'ON'
+    end
+
     #Delete the options from the actual item query since items don't have corresponding fields
-    report_format = request.query['report_format']
-    request.query.delete('report_format')
-
-    exclude_html_format = request.query['exclude_html_format']
-    request.query.delete('exclude_html_format')
-
-    exclude_summary = request.query['exclude_summary']
+    request.query.delete('report_type')
     request.query.delete('exclude_summary')
-
-    bulk_update = request.query['bulk_update']
-    request.query.delete('bulk_update')
-
-    chart = request.query['chart']
-    request.query.delete('chart')
-
-    chart_type = request.query['chart_type']
-    request.query.delete('chart_type')
-
-    chart_qty = request.query['chart_qty']
-    request.query.delete('chart_qty')
 
     select_by = Array.new() #to pass to report for summary
 
@@ -368,14 +368,14 @@ class QueryResults < WEBrick::HTTPServlet::AbstractServlet
     if chart then
 
       #sort the ids so the detail listing matches chart
-      if chart_type != 'timeline' then
+      if report_type != 'timeline' then
         subset_ids = $collection.sort(subset, sort_fields)
       else
         subset_ids = $collection.sort(subset, ['acquired','completed'])
         subset_ids.reverse!
       end
       #call and return the chart
-      return 200, "text/html", Chart.display(subset_ids, query, chart_type, chart_qty)
+      return 200, "text/html", Chart.display(subset_ids, query, report_type, chart_qty)
     end #if bulk_update
     #END BULK UPDATES
     ##############################################################################
@@ -485,7 +485,7 @@ report.each do |row|
 
     if exclude_summary == nil then
       report_row_formatted << field_summary(summary_count, summary_field_name, current_summary_value, summary_replacement_cost, summary_replacement_value, summary_quantity, summary_number_bases, summary_genre, report_format)
-      report_row_formatted << %Q~<tr>#{bulk_update_header}<th>#{header_row.join('</th><th>')}</th></tr>\n~
+      report_row_formatted << %Q~<tr>#{bulk_update_header}<th>#{header_row.join('</th><th>')}</th></tr>~
     end
 
     #update the report totals
@@ -585,10 +585,14 @@ end #each row
 #return a text only report if requested so... remove html code
 if exclude_html_format then
     report_row_formatted.gsub! /[\n|\r]/, ", "
+    report_row_formatted.gsub! '<thead[^>]*>',''
+    report_row_formatted.gsub! '</thead>',''
+    report_row_formatted.gsub! '<tfoot[^>]*>',''
+    report_row_formatted.gsub! '</tfoot>',''
     report_row_formatted.gsub! '</tr>,',"\n"
-    report_row_formatted.gsub! '<tr>',''
+    report_row_formatted.gsub! '<tr[^>]*>',''
     report_row_formatted.gsub! '</td><td>',"\t"
-    report_row_formatted.gsub! '<td>',''
+    report_row_formatted.gsub! '<td[^>]*>',''
     report_row_formatted.gsub! '</td>',''
     report_row_formatted.gsub! '</a>',''
     report_row_formatted.gsub! /<a href[^>]*>/, ''
@@ -610,6 +614,9 @@ end #if bulk_update
   report_html << %Q~<!DOCTYPE html><html lang="en">
   <head><title>#{$APPLICATION_NAME} Report - #{report_name}</title>
     <link rel="stylesheet" type="text/css" href="../application_styles/report.css" />
+    <link rel="stylesheet" type="text/css" href="../sortable_table/sortable-table.css" />
+    <link rel="stylesheet" href="../sortable/sortable-theme-minimal.css" />
+    <script src='../sortable/sortable.js'></script>
   </head><body>
    <div style="width:100%;">
    <h1 style="width:100%;text-align:center;">#{report_name}</h1>
@@ -617,7 +624,7 @@ end #if bulk_update
 
     <table style="width:40%;margin:auto;font-weight:bold;">
       <tr>
-        <td>Records: #{total_count} | Bases: #{total_number_bases} | Seperate Pieces: #{total_quantity}</td>
+        <td>Records: #{total_count} | Bases: #{total_number_bases} | Separate Pieces: #{total_quantity}</td>
         <td>#{select_by.join(' ')}</td>
       </tr>
       <tr>
@@ -628,9 +635,9 @@ end #if bulk_update
 
   </div>
    <div>
-   <table id='report'>
-   <tr><th>#{header_row.join('</th><th>')}</th></tr>
-    #{report_row_formatted}
+  <table class="sortable-theme-minimal" data-sortable id='report'>
+   <thead><tr><th>#{header_row.join('</th><th>')}</th></tr></thead>
+   <tbody>#{report_row_formatted}</tbody>
     </table>
     </div>
     </body></html> ~
@@ -652,7 +659,7 @@ end #format_results
     genres.uniq!
 
   if report_format.to_s == '' then
-    summary_row = %Q~<tr style="background-color:#dddddd;font-size:14pt;padding:8px;font-decoration:bold;"><td colspan=#{colspan}> #{summary_count} items in #{summary_field} #{summary_field_value} | quantity: #{summary_quantity} | number of bases: #{summary_number_bases} | replacement cost: $ #{summary_cost} | sell value: $ #{summary_value}</td></tr>~
+    summary_row = %Q~<tr style="background-color:#dddddd;font-size:14pt;padding:8px;font-decoration:bold;"><td colspan=#{colspan}> <span style="font-weight:bold;">SUMMARY: #{summary_field_value} #{summary_field}</span> #{summary_count} records | quantity: #{summary_quantity} | number of bases: #{summary_number_bases} | replacement cost: $ #{summary_cost} | sell value: $ #{summary_value}</td></tr>\n~
   else
     summary_row = %Q~</table>
     <div style="display:inline-block;white-space:nowrap;font-size:97pt;height:100%;width:20%;float:left;">
@@ -788,17 +795,26 @@ class Query < WEBrick::HTTPServlet::AbstractServlet
       end #instance_variables.each
 
 query_options_menu = %Q~<table style="width:100%;color:#8A8370;font-size:9pt;"><tr><th style="color:#8A8370;text-align:left;font-size:14pt;">query options</th></tr>
-            <tr><td><input type='checkbox' name='exclude_summary' id='exclude_summary' #{exclude_summary} /> exclude column one summary</td></tr>
-            <tr><td><input type='checkbox' name='exclude_html_format' id='exculde_html_format' #{exclude_html_format} /> exclude html format</td></tr>
+            <!-- tr><td><input type='checkbox' name='exclude_html_format' id='exclude_html_format' #{exclude_html_format} /> exclude html format</td></tr>
             <tr><td><input type='checkbox' name='report_format' id='report_format' #{report_format} /> label report format</td></tr>
             <tr><td><input type='checkbox' name='bulk_update' id='bulk_update' /> bulk update</td></tr>
-            <tr><td><input type='checkbox' name='chart' id='chart' /> chart
-                    <select name='chart_type' id='chart_type'><option value='pie'>pie</option><option value='bar'>bar</option><option value='bar-stacked'>bar-stacked</option><option value='bar-grouped'>bar-grouped</option><option value='timeline'>timeline</option></select>
-                    <input type='checkbox' name='chart_qty' id='chart_qty' /> sum quantity<br />&nbsp;&nbsp;&nbsp;&nbsp;(default is to count records)
+            -->
+            <tr><td><select name='report_type' id='report_type'>
+                      <option value='standard'>standard</option>
+                      <option value='bulk_update'>bulk update</option>
+                      <option value='pie'>chart - pie</option>
+                      <option value='bar'>chart - bar</option>
+                      <option value='bar-stacked'>chart - bar-stacked</option>
+                      <option value='bar-grouped'>chart - bar-grouped</option>
+                      <option value='timeline'>chart - timeline</option>
+                      <option value='labels'>drawer labels</option>
+                      <option value='tab_delimited'>tab delimited</option>
+                    </select>
+                    <div><input type='checkbox' name='exclude_summary' id='exclude_summary' #{exclude_summary} /> exclude column one summary</div>
             </td></tr>
           </table>~
 
-    query_html = %Q^<h1 style='width=100%;text-align:center;'>Query</h1>
+    query_html = %Q^<h1 style='width=100%;text-align:center;font-size:18pt;font-weight:bold;'>Query</h1>
       <div style='width:100%;float:left;'>
       <form id='query' name='query' method='POST' target='_blank' action='/query_results'>
 
@@ -806,7 +822,7 @@ query_options_menu = %Q~<table style="width:100%;color:#8A8370;font-size:9pt;"><
 
         <div style='float:left;'>
         <span style='color:#8A8370;font-size:12pt;align:center;width:4em;'>order</span>
-        <span style='display:inline-block;width:7em;color:#8A8370;font-size:12pt;align:center;'>column name</span>
+        <span style='display:inline-block;width:7em;color:#8A8370;font-size:12pt;align:center;'>column</span>
         <span style='color:#8A8370;font-size:12pt;text-align:center;'>filter (use ~ for OR)</span>
         <ul id='sortlist'>
         #{selected_columns.join}
@@ -2520,7 +2536,7 @@ class Chart < WEBrick::HTTPServlet::AbstractServlet
   #########################################################################################
   # DISPLAY
   #Determines chart type and creates plotly Javascript
-  def self.display(subset_ids, query, chart_type, chart_qty)
+  def self.display(subset_ids, query, report_type, chart_qty)
 
     chart_fields = Array.new()
 
@@ -2534,7 +2550,7 @@ class Chart < WEBrick::HTTPServlet::AbstractServlet
     end
 
     #make sure the correct number of data fields have been submitted
-    case chart_type
+    case report_type
       when "pie", "bar"
         if chart_fields[0] == 0 or chart_fields[0] == nil then
           details = "<h3>Pie and Bar charts require a field in order 1. Please try again.</h3>"
@@ -2585,7 +2601,7 @@ class Chart < WEBrick::HTTPServlet::AbstractServlet
 
 
 ############################################  PIE/ SIMPLE BAR BAR ######################################
-  if chart_type.match(/^pie|bar$/) then
+  if report_type.match(/^pie|bar$/) then
 
     #hash for storing colors indexed with chart_field[0] values used to assign color to detail records
     detail_color = Hash.new()
@@ -2618,10 +2634,14 @@ class Chart < WEBrick::HTTPServlet::AbstractServlet
 
       total_count += qty.to_i
       #populate a row for the detail table displayed beneath the chart
-      details << %Q~<tr><td>#{link_id($collection.items[key].id)}</td><td>#{qty}</td><td>#{$collection.items[key].name}</td>
-          <td><span class='textshadow' style="color:#{detail_color[$collection.items[key].instance_eval(chart_fields[0])]};">
+      details << %Q~<tr>
+        <td>#{link_id($collection.items[key].id)}</td>
+        <td>#{qty}</td><td>#{$collection.items[key].name}</td>
+        <td><span class='textshadow' style="color:#{detail_color[$collection.items[key].instance_eval(chart_fields[0])]};">
             #{$collection.items[key].instance_eval(chart_fields[0])}
-          </span></td></tr>~
+            </span>
+        </td>
+      </tr>~
 
     end #each subset_id
 
@@ -2640,17 +2660,17 @@ class Chart < WEBrick::HTTPServlet::AbstractServlet
     values.map!{ | m | if m.match(/^$/) then '0' else m end }
 
     #slightly different plotly javascript data between pie and simple bar charts
-    if chart_type == 'pie' then
+    if report_type == 'pie' then
       data << %Q~
       var xValues = ['#{labels.join("','")}'];
       var yValues = [#{values.join(",")}];
       var data = [{
           labels: xValues,
           values: yValues,
-          type: '#{chart_type}',
+          type: '#{report_type}',
           rotation: -30
           }];\n~
-    elsif chart_type == 'bar' then
+    elsif report_type == 'bar' then
       data << %Q~
       var xValues = ['#{labels.join("','")}'];
       var yValues = [#{values.join(",")}];
@@ -2658,11 +2678,11 @@ class Chart < WEBrick::HTTPServlet::AbstractServlet
               x: xValues,
               y: yValues,
               marker: {color: ["#{detail_color.values.join('","')}"]},
-              type: '#{chart_type}',
+              type: '#{report_type}',
               text: yValues.map(String),
               textposition: 'auto'
             }];\n~
-    end #chart_type pie or bar plotly data
+    end #report_type pie or bar plotly data
 
     #layout section of plotly data
     layout = %Q~var layout = {colorway : #{colorway},
@@ -2677,19 +2697,24 @@ class Chart < WEBrick::HTTPServlet::AbstractServlet
           };~
 
     #header row for the detail listing of records
-    detail_header_row = %Q~<tr><th>ID</th><th>#{count_of}<br />#{total_count}</th><th>Name</th><th>#{chart_fields[0]}</th></tr>~
+    detail_header_row = %Q~<tr>
+      <th>ID</th>
+      <th>#{count_of} #{total_count}</th>
+      <th>Name</th>
+      <th>#{chart_fields[0]}</th>
+    </tr>~
 
 
 
 
 #puts "###########################################  STACKED/GROUPED BAR ######################################"
-  elsif chart_type.match(/^bar-grouped|bar-stacked$/) then
+  elsif report_type.match(/^bar-grouped|bar-stacked$/) then
 
     detail_color = Hash.new()
     i = 0
 
     #what type of bar chart are we making?
-    case chart_type
+    case report_type
     when "bar-grouped"
         barmode = "group"
     when "bar-stacked"
@@ -2812,12 +2837,18 @@ class Chart < WEBrick::HTTPServlet::AbstractServlet
 
               };~
 
-    detail_header_row = %Q~<tr><th>ID</th><th>#{count_of}<br />#{total_count}</th><th>Name</th><th>#{chart_fields[0]}</th><th>#{chart_fields[1]}</th></tr>~
+    detail_header_row = %Q~<tr>
+      <th>ID</th>
+      <th>#{count_of} #{total_count}</th>
+      <th>Name</th>
+      <th>#{chart_fields[0]}</th>
+      <th>#{chart_fields[1]}</th>
+    </tr>~
 
 
 
 #puts "###########################################  TIMELINE ######################################"
-  elsif chart_type.match(/^timeline$/) then
+  elsif report_type.match(/^timeline$/) then
 
     completions = Array.new()
     completion_dates = Array.new()
@@ -2868,7 +2899,15 @@ class Chart < WEBrick::HTTPServlet::AbstractServlet
       end
 
       #if we added the record to the aquisicion/completed plots we want to add it to the detail listing
-      if add_to_detail == 'Y' then details << %Q~<tr><td>#{link_id($collection.items[key].id)}</td><td>#{$collection.items[key].quantity}</td><td>#{$collection.items[key].category}</td><td><span class='textshadow' style="color:#{color_hash[$collection.items[key].genre]};">#{$collection.items[key].genre}</span></td><td>#{$collection.items[key].name}</td><td>#{$collection.items[key].acquired}</td><td>#{$collection.items[key].completed}</td></tr>~ end
+      if add_to_detail == 'Y' then details << %Q~<tr>
+          <td>#{link_id($collection.items[key].id)}</td>
+          <td>#{$collection.items[key].quantity}</td>
+          <td>#{$collection.items[key].category}</td>
+          <td><span class='textshadow' style="color:#{color_hash[$collection.items[key].genre]};">#{$collection.items[key].genre}</span></td>
+          <td>#{$collection.items[key].name}</td>
+          <td>#{$collection.items[key].acquired}</td>
+          <td>#{$collection.items[key].completed}</td>
+        </tr>~ end
 
     end #subset_ids.each
 
@@ -2954,32 +2993,47 @@ class Chart < WEBrick::HTTPServlet::AbstractServlet
               };~
 
     #detail report header row for timeline is slightly different than other chart types
-    detail_header_row = %Q~<tr><th>ID</th><th>Quantity</th><th>Category</th><th>Genre</th><th>Name</th><th>Acquired<br />(#{acq_count})</th><th>Completed<br />(#{com_count})</th></tr>~
+    detail_header_row = %Q~<tr>
+      <th>ID</th>
+      <th>Quantity</th>
+      <th>Category</th>
+      <th>Genre</th>
+      <th>Name</th>
+      <th>Acquired (#{acq_count})</th>
+      <th>Completed (#{com_count})</th>
+    </tr>~
 
   end #of timeline chart type
 
 #pass whatever chart has been created to html_output
-  return html_output(chart_type, detail_header_row, details, traces, data, layout)
+  return html_output(report_type, detail_header_row, details, traces, data, layout)
 end #display
 
 
 #########################################################################################
 # HTML_OUTPUT
 #HTML code page that displays plotly charts
-def self.html_output (chart_type, detail_header_row, details, traces, data, layout)
+def self.html_output (report_type, detail_header_row, details, traces, data, layout)
     #return a page showing the updated fields and values
     chart = %Q~<!DOCTYPE html><html lang="en"><head>
+    <link rel="stylesheet" type="text/css" href="../application_styles/application.css" />
+    <link rel="stylesheet" type="text/css" href="../application_styles/report.css" />
+    <link rel="stylesheet" href="../sortable/sortable-theme-minimal.css" />
 	<script src='../plotly/plotly-2.20.0.min.js'></script>
-  <link rel="stylesheet" type="text/css" href="../application_styles/application.css" />
-  <link rel="stylesheet" type="text/css" href="../application_styles/report.css" />
+  <script src='../sortable/sortable.js'></script>
   <style>
     .textshadow {text-shadow: -1px 1px 1px #bbb, 1px 2px 1px #bbb,  1px -1px 0 #bbb,  -1px -1px 0 #bbb; }
   </style>
-  <title>#{$APPLICATION_NAME} #{chart_type.capitalize} Chart</title>
+  <title>#{$APPLICATION_NAME} #{report_type.capitalize} Chart</title>
   </head>
-  <body><h2>#{chart_type.capitalize} Chart <span style="width:100%;color:#8A8370;font-size:9pt;"> (close browser tab when finshed to return to Query)</span></h2>
+  <body><h2>#{report_type.capitalize} Chart <span style="width:100%;color:#8A8370;font-size:9pt;"> (close browser tab when finshed to return to Query)</span></h2>
 	 <div id='Chart' style='width:95%;height:auto;'><!-- Plotly chart will be drawn inside this DIV --></div>
-   <div><table id='report'>#{detail_header_row} #{details}</table></div>
+   <div>
+      <table class="sortable-theme-minimal" data-sortable id='report'>
+        <thead>#{detail_header_row}</thead>
+        <tbody>#{details}</tbody>
+     </table>
+   </div>
   </body>
   <script>
     #{traces}
@@ -2990,6 +3044,7 @@ def self.html_output (chart_type, detail_header_row, details, traces, data, layo
 
     Plotly.newPlot('Chart', data, layout, config);
   </script>
+
   </html>~
 
   return chart
