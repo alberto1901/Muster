@@ -12,6 +12,7 @@
     #report td, #report th {
       border: 1px solid #ddd;
       padding-left: 8px;
+      vertical-align: top;
     }
 
     #report tr:nth-child(even){background-color: #f2f2e6;}
