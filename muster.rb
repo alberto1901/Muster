@@ -391,6 +391,8 @@ def format_results(subset_ids, query, sort_fields=nil, select_by=nil, report_for
   #method variables
   report_html  = String.new
   report       = Array.new()
+  summary_descriptions = Hash.new
+  summary_genres = Array.new()
   row_count    = 0
 
   if select_by != nil then select_by.reject! { |f| f.nil? || f.match(/^\s+$/) } end #clean out empty members
@@ -405,6 +407,9 @@ def format_results(subset_ids, query, sort_fields=nil, select_by=nil, report_for
 
     #put the item id as the first element of the rows
     report_row[0] = id
+
+    #create item listings for drawer labels
+    summary_descriptions[$collection.items[id].location] = summary_descriptions[$collection.items[id].location].to_s + ",#{$collection.items[id].quantity} #{$collection.items[id].name} <i>(id #{id})</i>"
 
     # now loop through each field of the requested query, add it to the query response
     position = 0
@@ -461,7 +466,6 @@ def format_results(subset_ids, query, sort_fields=nil, select_by=nil, report_for
   summary_quantity          = 0
   summary_number_bases      = 0
 
-
   #report totals
   total_count               = 0
   total_replacement_cost    = 0
@@ -484,7 +488,7 @@ report.each do |row|
   if row[0].to_s != current_summary_value && current_summary_value.to_s != '' then
 
     if exclude_summary == nil then
-      report_row_formatted << field_summary(summary_count, summary_field_name, current_summary_value, summary_replacement_cost, summary_replacement_value, summary_quantity, summary_number_bases, summary_genre, report_format)
+      report_row_formatted << field_summary(summary_count, summary_field_name, current_summary_value, summary_replacement_cost, summary_replacement_value, summary_quantity, summary_number_bases, summary_genre, summary_descriptions, report_format)
       report_row_formatted << %Q~<tr>#{bulk_update_header}<th>#{header_row.join('</th><th>')}</th></tr>~
     end
 
@@ -501,8 +505,9 @@ report.each do |row|
     summary_quantity          = 0
     summary_number_bases      = 0
 
-    summary_genre             = ''
+    summary_genre.clear()
     summary_tags              = ''
+#    summary_descriptions      = ''
   end
 
   #apply the formatting for monetary values (e.g., show 23.50 rather than 23.5)
@@ -547,7 +552,6 @@ report.each do |row|
     bulk_select = %Q~<td><input type='checkbox' id='#{item_key.to_i}' name='#{item_key.to_i}' value='#{item_key.to_i}' checked='checked'></td>~
   end
 
-
   #add the next item to the report
   report_row_formatted << %Q~<tr>#{bulk_select}<td>#{row.join('</td><td>')}</td></tr>\n~
   #store the current summary column value to see if it changes next item and therefore needing a summary row
@@ -560,11 +564,13 @@ report.each do |row|
   summary_number_bases      = summary_number_bases      + $collection.items[item_key.to_i].number_bases.to_i
 
   #used in creating drawer labels
-  summary_genre  << %Q~<b>#{$collection.items[item_key.to_i].genre}~
   if $collection.items[item_key.to_i].tags != '' then
-    summary_genre << %Q~:</b> #{$collection.items[item_key.to_i].tags.gsub(',', ' -')},~
-  else summary_genre << "</b>,"
+    summary_genre << %Q~,#{$collection.items[item_key.to_i].genre}: #{$collection.items[item_key.to_i].tags.gsub(',', ' -')}|,~
+  else
+    summary_genre  << %Q~,#{$collection.items[item_key.to_i].genre}~
   end
+
+
 #  summary_genre  << $collection.items[item_key.to_i].tags
 
 end #each row
@@ -573,7 +579,7 @@ end #each row
 
   #append the last location summary row to report
   if exclude_summary == nil then
-    report_row_formatted << field_summary(summary_count, summary_field_name, current_summary_value, summary_replacement_cost, summary_replacement_value, summary_quantity, summary_number_bases, summary_genre, report_format)
+    report_row_formatted << field_summary(summary_count, summary_field_name, current_summary_value, summary_replacement_cost, summary_replacement_value, summary_quantity, summary_number_bases, summary_genre, summary_descriptions, report_format)
   end
     #update the report totals
     total_count               = total_count             + summary_count
@@ -648,27 +654,56 @@ end #format_results
 
 
   #create and return summary row
-  def field_summary(summary_count, summary_field, summary_field_value, summary_cost='', summary_value='', summary_quantity='', summary_number_bases='', summary_genre='',report_format=nil, colspan=20)
+  def field_summary(summary_count, summary_field, summary_field_value, summary_cost='', summary_value='', summary_quantity='', summary_number_bases='', summary_genre='',summary_descriptions='',report_format=nil, colspan=20)
     summary_row = String.new
     summary_cost = format("%.2f", summary_cost)
     summary_value = format("%.2f", summary_value)
 
-    #used for drawer labels!
-    genres = summary_genre.to_s.split(',')
-    genres.flatten!
-    genres.uniq!
-
-  if report_format.to_s == '' then
+   if report_format.to_s == '' then
     summary_row = %Q~<tr style="background-color:#dddddd;font-size:14pt;padding:8px;font-decoration:bold;"><td colspan=#{colspan}> <span style="font-weight:bold;">SUMMARY: #{summary_field_value} #{summary_field}</span> #{summary_count} records | quantity: #{summary_quantity} | number of bases: #{summary_number_bases} | replacement cost: $ #{summary_cost} | sell value: $ #{summary_value}</td></tr>\n~
   else
-    summary_row = %Q~</table>
-    <div style="display:inline-block;white-space:nowrap;font-size:97pt;height:100%;width:20%;float:left;">
-      #{summary_field_value}
-      <div style="display: inline-block;white-space:nowrap;font-size:24pt;">
-        #{genres.join('<br />')}<br />
-        <span style="font-style:italic;">#{summary_quantity} quantity / #{summary_number_bases} bases</span>
-      </div>
-    </div>
+ ###### #this is the drawer label title page #####
+   #used for drawer labels!
+    genres = summary_genre.to_s.split(',')
+    genres.shift
+    genres.flatten!
+    genres.uniq!
+    genres = genres.reject { |c| c.empty? }
+    genres.sort!
+
+    genres_str = genres.join(" ")
+    genres_str.gsub! ":"," : "
+    genres = genres_str.split(" ")
+    genres.uniq!
+    genres_str = genres.join(" ")
+    genres_str.gsub! " :", ":"
+    genres_str.gsub! "|",","
+    genres_str.gsub!(/,$/,'')
+
+
+    #used for drawer labels!
+    descriptions = summary_descriptions[summary_field_value].to_s.split(',')
+    descriptions.shift
+    descriptions.flatten!
+    descriptions.uniq!
+
+
+  summary_row = %Q~</table>
+  <table style="width:98%;height:2.2in;border-top:2px solid black;border-bottom:2px solid black;"><tr>
+    <td style="width:20%;vertical-align:top;">
+      <span style="font-size:144pt;">#{summary_field_value}</span>
+    </td>
+    <td style="vertical-align:top;">
+      <span style="font-size:22pt;font-weight:bold;">#{genres_str}</span>
+      <br /><table style="width:100%;font-size:10pt;" ><tr>
+                <td>#{descriptions[0]}<br />#{descriptions[1]}<br />#{descriptions[2]}<br />#{descriptions[3]}<br />#{descriptions[4]}<br />#{descriptions[5]}<br />#{descriptions[6]}<br />#{descriptions[7]}</td>
+                <td>#{descriptions[8]}<br />#{descriptions[9]}<br />#{descriptions[10]}<br />#{descriptions[11]}<br />#{descriptions[12]}<br />#{descriptions[13]}<br />#{descriptions[14]}<br />#{descriptions[15]}</td>
+                <td>#{descriptions[16]}<br />#{descriptions[17]}<br />#{descriptions[18]}<br />#{descriptions[19]}<br />#{descriptions[20]}<br />#{descriptions[21]}<br />#{descriptions[22]}<br />#{descriptions[23]}</td>
+                <td>#{descriptions[24]}<br />#{descriptions[25]}<br />#{descriptions[26]}<br />#{descriptions[27]}<br />#{descriptions[28]}<br />#{descriptions[29]}<br />#{descriptions[30]}<br />#{descriptions[31]}</td>
+            </tr></table>
+    </td>
+  </tr></table>
+<div></div>
 
     <table id="report">~
   end
@@ -1478,7 +1513,10 @@ return html = %Q~<!DOCTYPE html>
 
 
       <form method='POST' action='/save_item' enctype="multipart/form-data">
-        <button  type="button" class="collapsible" id="button_save" style="color:#8a8370;background-color:#c9c9b7;padding:1px;">&#8227; save <input type='submit' value='save' style="width:75px;height:28px;font-weight:bold;font-size:18px;float:right;"/></button>
+        <button  type="button" class="collapsible" id="button_save" style="color:#8a8370;background-color:#c9c9b7;padding:1px;">&#8227; save
+          <input type='submit' value='save' style="width:75px;height:28px;font-weight:bold;font-size:18px;float:right;"/><br />
+          <input type='button' id='ditto-button' value='ditto' onclick="javascript:ditto();" style="width:75px;height:28px;font-weight:bold;font-size:18px;float:right;"/>
+        </button>
         <br style="clear:both;" />
         <img class="icon" name='icon_picture' style="float:left;" id='icon_picture' src='../#{image_dir}/#{icon_image}' alt="icon picture" /><h1> #{name}</h1>
         <br style="clear:both;" />
@@ -1838,6 +1876,22 @@ function change_item_image(file, event)
 function fill_form_field(form_field, form_value)
 {
   document.getElementById(form_field).value=form_value;
+}
+
+//used to clear id field when ditto-ing old record
+var old_id = undefined;
+function ditto(){
+  if(document.getElementById('ditto-button').value == 'Cancel'){
+    document.getElementById('id').value = old_id;
+    document.getElementById('ditto-button').value='Ditto';
+    old_id.value = '';
+  }
+  else{
+    old_id = document.getElementById('id').value;
+    alert('HI! Ditto-ing! id: ' + old_id);
+    document.getElementById('ditto-button').value='Cancel';
+    document.getElementById('id').value='';
+  }
 }
 
 </script>
